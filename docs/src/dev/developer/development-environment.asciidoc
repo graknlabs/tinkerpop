@@ -104,7 +104,7 @@ The build optionally requires link:https://www.microsoft.com/net/core[.NET Core 
 `gremlin-dotnet` module. If .NET Core SDK is not installed, TinkerPop will still build with Maven, but .NET projects
 will be skipped.
 
-`gremlin-dotnet` can be build and tested from the command line with:
+`gremlin-dotnet` can be built and tested from the command line with:
 
 [source,text]
 mvn clean install -Pgremlin-dotnet
@@ -140,6 +140,20 @@ other existing Node.js runtime instances in your machine.
 
 The release manager should have the authentication token set, for more information see the Release Environment
 section below.
+
+
+[[docker-environment]]
+=== Docker Environment
+The build optionally requires Docker to build Docker images of Gremlin Server and Gremlin Console.
+
+The Docker images can be built from the command line with:
+[source,text]
+----
+mvn clean install -Pdocker-images
+----
+which enables the "docker-images" Maven profile or in a more automated fashion simply add a `.docker` file to the
+directories of the `gremlin-server` and/or `gremlin-console` modules which will signify to Maven that Docker is present
+in the environment.
 
 
 [[release-environment]]
