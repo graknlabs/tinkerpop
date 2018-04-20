@@ -63,6 +63,8 @@ import java.util.stream.Collectors;
  */
 public interface TraversalStrategies extends Serializable, Cloneable {
 
+    static Set<Class> LOADED = new HashSet<>();
+
     static List<Class<? extends TraversalStrategy>> STRATEGY_CATEGORIES = Collections.unmodifiableList(Arrays.asList(TraversalStrategy.DecorationStrategy.class, TraversalStrategy.OptimizationStrategy.class, TraversalStrategy.ProviderOptimizationStrategy.class, TraversalStrategy.FinalizationStrategy.class, TraversalStrategy.VerificationStrategy.class));
 
     /**
@@ -244,20 +246,31 @@ public interface TraversalStrategies extends Serializable, Cloneable {
         public static TraversalStrategies getStrategies(final Class graphOrGraphComputerClass) {
             try {
                 // be sure to load the class so that its static{} traversal strategy registration component is loaded.
-                // this is more important for GraphComputer classes as they are typically not instantiated prior to strategy usage like Graph classes.
-                final String graphComputerClassName = null != graphOrGraphComputerClass.getDeclaringClass() ?
+                // this is more important for GraphComputer classes as they are typically not instantiated prior to
+                // strategy usage like Graph classes.
+                if (!LOADED.contains(graphOrGraphComputerClass)) {
+                    final String graphComputerClassName = null != graphOrGraphComputerClass.getDeclaringClass() ?
                         graphOrGraphComputerClass.getCanonicalName().replace("." + graphOrGraphComputerClass.getSimpleName(), "$" + graphOrGraphComputerClass.getSimpleName()) :
                         graphOrGraphComputerClass.getCanonicalName();
-                Class.forName(graphComputerClassName);
+                    Class.forName(graphComputerClassName);
+
+                    // keep track of stuff we already loaded once - stuff in this if/statement isn't cheap and this
+                    // method gets called a lot, basically every time a new traversal gets spun up (that includes
+                    // child traversals.
+                    LOADED.add(graphOrGraphComputerClass);
+                }
             } catch (final ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
-            if (Graph.class.isAssignableFrom(graphOrGraphComputerClass)) {
-                final TraversalStrategies traversalStrategies = GRAPH_CACHE.get(graphOrGraphComputerClass);
-                return null == traversalStrategies ? GRAPH_CACHE.get(Graph.class) : traversalStrategies;
+            
+            if (GRAPH_CACHE.containsKey(graphOrGraphComputerClass)) {
+                return GRAPH_CACHE.get(graphOrGraphComputerClass);
+            } else if (Graph.class.isAssignableFrom(graphOrGraphComputerClass)) {
+                return GRAPH_CACHE.get(Graph.class);
+            } else if (GRAPH_COMPUTER_CACHE.containsKey(graphOrGraphComputerClass)) {
+                return GRAPH_COMPUTER_CACHE.get(graphOrGraphComputerClass);
             } else if (GraphComputer.class.isAssignableFrom(graphOrGraphComputerClass)) {
-                final TraversalStrategies traversalStrategies = GRAPH_COMPUTER_CACHE.get(graphOrGraphComputerClass);
-                return null == traversalStrategies ? GRAPH_COMPUTER_CACHE.get(GraphComputer.class) : traversalStrategies;
+                return GRAPH_COMPUTER_CACHE.get(GraphComputer.class);
             } else {
                 throw new IllegalArgumentException("The TraversalStrategies.GlobalCache only supports Graph and GraphComputer strategy caching: " + graphOrGraphComputerClass.getCanonicalName());
             }
