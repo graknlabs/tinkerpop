@@ -74,6 +74,7 @@ This release also includes changes from <<release-3-2-8, 3.2.8>>.
 * TINKERPOP-1357 Centrality Recipes should mention pageRank and OLAP.
 * TINKERPOP-1489 Provide a Javascript Gremlin Language Variant
 * TINKERPOP-1586 SubgraphStrategy in OLAP
+* TINKERPOP-1628 Implement TraversalSelectStep.
 * TINKERPOP-1726 Support WebSockets ping/pong keep-alive in Gremlin server
 * TINKERPOP-1842 iterate() missing in terminal steps documentation
 * TINKERPOP-1844 Python GLV test should run for GraphSON 3.0 *(breaking)*
